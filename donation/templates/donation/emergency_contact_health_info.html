@@ -1,0 +1,122 @@
+{% extends "donation/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Emergency Contact & Health Information{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if not admin_user %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Emergency Contact & Health Information</h4>
+                    </div>
+                    <div class="card-body">
+                        {% if donor %}
+                            <!-- Emergency Contact Section -->
+                            <div class="mb-4">
+                                <h5 class="border-bottom pb-2">Emergency Contact</h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p class="mb-1"><strong>Name:</strong></p>
+                                        <p>{{ donor.emergency_contact_name|default:"Not provided" }}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-1"><strong>Relationship:</strong></p>
+                                        <p>{{ donor.emergency_contact_relation|default:"Not provided" }}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-1"><strong>Phone:</strong></p>
+                                        <p>{{ donor.emergency_contact_phone|default:"Not provided" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Health Information Section -->
+                            <div class="mb-4">
+                                <h5 class="border-bottom pb-2">Health Information</h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p class="mb-1"><strong>Weight:</strong></p>
+                                        <p>{{ donor.weight|default:"Not recorded" }} {% if donor.weight %}kg{% endif %}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-1"><strong>Last Hemoglobin Level:</strong></p>
+                                        <p>{{ donor.last_hemoglobin_level|default:"Not recorded" }} {% if donor.last_hemoglobin_level %}g/dL{% endif %}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-1"><strong>Last Screening Date:</strong></p>
+                                        <p>{{ donor.last_screening_date|date:"F d, Y"|default:"Not recorded" }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-md-4">
+                                        <p class="mb-1"><strong>Allergies:</strong></p>
+                                        <p>{{ donor.allergies|default:"None reported"|linebreaks }}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-1"><strong>Chronic Conditions:</strong></p>
+                                        <p>{{ donor.chronic_conditions|default:"None reported"|linebreaks }}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="mb-1"><strong>Current Medications:</strong></p>
+                                        <p>{{ donor.medications|default:"None reported"|linebreaks }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Eligibility Status -->
+                                <div class="mt-4">
+                                    <h5 class="border-bottom pb-2">Donation Status</h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Eligibility Status:</strong></p>
+                                            <div class="alert {% if donor.is_deferred %}alert-danger{% else %}alert-success{% endif %} mb-0">
+                                                {% if donor.is_deferred %}
+                                                    <strong>Deferred:</strong> {{ donor.deferral_reason }}
+                                                {% else %}
+                                                    {{ donor.eligibility_status|default:"Pending Assessment" }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <a href="{% url 'update-health-info' %}" class="btn btn-primary">
+                                    <i class="fas fa-edit"></i> Update Health Information
+                                </a>
+                                <a href="{% url 'donor-dashboard' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-exclamation-circle fa-3x text-warning mb-3"></i>
+                                <h5>Profile Not Found</h5>
+                                <p class="text-muted">Please complete your profile to view health information.</p>
+                                <a href="{% url 'update-profile' %}" class="btn btn-primary">Complete Profile</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Admin users do not have donor health information to view.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

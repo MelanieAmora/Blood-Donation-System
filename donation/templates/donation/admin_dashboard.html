@@ -1,0 +1,250 @@
+{% extends 'donation/base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Blood Donation System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Admin Dashboard</h1>
+        <div class="btn-group">
+            <a href="{% url 'create-drive' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Drive
+            </a>
+            <a href="{% url 'manage-inventory' %}" class="btn btn-success">
+                <i class="fas fa-boxes"></i> Manage Inventory
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="row g-3 mb-4">
+        <!-- Blood Inventory Summary -->
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Blood Inventory</h6>
+                    <h2 class="display-4 mb-3">{{ blood_inventory_summary.total_units }}</h2>
+                    <p class="mb-0">Total Units Available</p>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between">
+                        <small>Critical: {{ blood_inventory_summary.critical_inventory }}</small>
+                        <small>Expiring Soon: {{ blood_inventory_summary.expiring_soon }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donor Statistics -->
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Donors</h6>
+                    <h2 class="display-4 mb-3">{{ donor_statistics.total_donors }}</h2>
+                    <p class="mb-0">Registered Donors</p>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between">
+                        <small>New (30d): {{ donor_statistics.recent_registrations }}</small>
+                        <small>Success Rate: {{ donor_statistics.success_rate }}%</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drive Statistics -->
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Donation Drives</h6>
+                    <h2 class="display-4 mb-3">{{ drive_statistics.upcoming_count }}</h2>
+                    <p class="mb-0">Upcoming Drives</p>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between">
+                        <small>Today: {{ drive_statistics.today_count }}</small>
+                        <small>Past: {{ drive_statistics.past_count }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Statistics -->
+        <div class="col-md-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Monthly Overview</h6>
+                    <h2 class="display-4 mb-3">{{ monthly_statistics.this_month_donations }}</h2>
+                    <p class="mb-0">Successful Donations This Month</p>
+                    <hr class="my-2">
+                    <div class="text-center">
+                        <small>{{ today|date:"F Y" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blood Type Distribution and Recent Activity -->
+    <div class="row g-3 mb-4">
+        <!-- Blood Type Distribution -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Blood Type Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Blood Type</th>
+                                    <th>Available Units</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in blood_type_stats %}
+                                <tr>
+                                    <td><span class="badge bg-danger">{{ stat.blood_type }}</span></td>
+                                    <td>{{ stat.total_units }}</td>
+                                    <td>
+                                        {% if stat.total_units < 5 %}
+                                            <span class="badge bg-danger">Critical</span>
+                                        {% elif stat.total_units < 10 %}
+                                            <span class="badge bg-warning">Low</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Normal</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Recent Donation Drives</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for drive in recent_drives %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ drive.name }}</h6>
+                                <small>{{ drive.date|date:"M d, Y" }}</small>
+                            </div>
+                            <p class="mb-1">
+                                <i class="fas fa-map-marker-alt text-danger"></i> {{ drive.location }}
+                                <span class="badge bg-info">{{ drive.registered_count }} registered</span>
+                            </p>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted mb-0">No recent donation drives.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Events and Quick Actions -->
+    <div class="row g-3">
+        <!-- Upcoming Events -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Upcoming Events</h5>
+                    <a href="{% url 'drive-list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Drive Name</th>
+                                    <th>Date</th>
+                                    <th>Location</th>
+                                    <th>Registration</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for drive in next_drives %}
+                                <tr>
+                                    <td>{{ drive.name }}</td>
+                                    <td>{{ drive.date|date:"M d, Y" }}</td>
+                                    <td>{{ drive.location }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            {% widthratio drive.registered_count drive.max_donors 100 as percentage %}
+                                            <div class="progress-bar {% if percentage >= 90 %}bg-danger{% elif percentage >= 70 %}bg-warning{% else %}bg-success{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ percentage }}%"
+                                                 aria-valuenow="{{ percentage }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ drive.registered_count }}/{{ drive.max_donors }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'drive-detail' drive.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'drive-registrations' drive.id %}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-list"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No upcoming events scheduled.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'create-drive' %}" class="btn btn-lg btn-outline-primary">
+                            <i class="fas fa-calendar-plus"></i> Schedule New Drive
+                        </a>
+                        <a href="{% url 'manage-inventory' %}" class="btn btn-lg btn-outline-success">
+                            <i class="fas fa-boxes"></i> Update Inventory
+                        </a>
+                        <a href="{% url 'manage-donors' %}" class="btn btn-lg btn-outline-info">
+                            <i class="fas fa-users"></i> Manage Donors
+                        </a>
+                        <a href="{% url 'drive-list' %}" class="btn btn-lg btn-outline-secondary">
+                            <i class="fas fa-calendar"></i> View All Drives
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any JavaScript for interactivity here
+    // For example, you could add charts using Chart.js
+</script>
+{% endblock %} 

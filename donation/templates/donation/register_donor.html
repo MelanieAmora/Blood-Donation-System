@@ -1,0 +1,130 @@
+{% extends 'donation/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Register as Donor - Blood Donation System{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-box">
+        <div class="register-header">
+            <i class="fas fa-user-plus text-danger mb-3"></i>
+            <h2>Become a Donor</h2>
+            <p>Join our community of heroes and help save lives</p>
+        </div>
+        <form method="post" class="register-form">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-danger w-100">
+                <i class="fas fa-heart me-2"></i>Register as Donor
+            </button>
+        </form>
+        <div class="register-footer">
+            <p>Already have an account? <a href="{% url 'login' %}" class="text-danger">Sign in</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background-color: #f8f9fa;
+    }
+
+    .register-box {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .register-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .register-header i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .register-header h2 {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .register-header p {
+        color: #6c757d;
+    }
+
+    .register-form {
+        margin-bottom: 1.5rem;
+    }
+
+    .register-form .form-control {
+        padding: 0.75rem 1rem;
+        border-radius: 5px;
+    }
+
+    .register-form .form-control:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .register-footer {
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .register-footer a {
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .register-footer a:hover {
+        text-decoration: underline;
+    }
+
+    /* Form field grouping */
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-row > div {
+        flex: 1;
+    }
+
+    /* Help text styling */
+    .form-text {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Required field indicator */
+    .asteriskField {
+        color: #dc3545;
+        margin-left: 0.25rem;
+    }
+
+    /* Custom radio and checkbox styling */
+    .form-check {
+        padding-left: 1.75rem;
+    }
+
+    .form-check-input:checked {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+</style>
+{% endblock %}

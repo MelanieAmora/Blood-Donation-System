@@ -1,0 +1,24 @@
+{% extends "donation/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Donation Drive{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4>Create New Donation Drive</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-danger">Create Drive</button>
+                    <a href="{% url 'drive-list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "donation/base.html" %}
+
+{% block title %}Delete Inventory Item{% endblock %}
+
+{% block content %}
+<h2>Confirm Delete Inventory Item</h2>
+
+<p>Are you sure you want to delete the inventory item:</p>
+<ul>
+    <li>Blood Type: {{ inventory_item.blood_type }}</li>
+    <li>Component: {{ inventory_item.component }}</li>
+    <li>Units: {{ inventory_item.units }}</li>
+    <li>Expiry Date: {{ inventory_item.expiry_date|date:"M d, Y" }}</li>
+</ul>
+
+<form method="POST">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a href="{% url 'manage-inventory' %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

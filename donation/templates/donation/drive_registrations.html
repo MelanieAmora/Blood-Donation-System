@@ -1,0 +1,292 @@
+{% extends "donation/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ drive.name }} - Registrations{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+<h2 class="mb-4">{{ drive.name }} - Registrations</h2>
+
+    <!-- Drive Information Card -->
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Drive Information</h5>
+    </div>
+    <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+        <p><strong>Date:</strong> {{ drive.date }}</p>
+        <p><strong>Time:</strong> {{ drive.start_time }} - {{ drive.end_time }}</p>
+        <p><strong>Location:</strong> {{ drive.location }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Medical Staff:</strong> {{ drive.medical_staff_count }}</p>
+        <p><strong>Registered Donors:</strong> {{ registrations.count }}/{{ drive.max_donors }}</p>
+                    <p><strong>Contact:</strong> {{ drive.contact_person }} ({{ drive.contact_number }})</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blood Type Targets -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Blood Type Targets</h5>
+</div>
+        <div class="card-body">
+            <div class="row">
+                {% for blood_type, data in drive.get_blood_type_availability.items %}
+                <div class="col-md-3 col-sm-6 mb-3">
+<div class="card">
+                        <div class="card-body text-center">
+                            <h3 class="display-4 mb-0">{{ blood_type }}</h3>
+                            <p class="mb-0">{{ data.current }}/{{ data.target }}</p>
+                            <div class="progress mt-2">
+                                <div class="progress-bar {% if data.current >= data.target %}bg-success{% else %}bg-danger{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {% widthratio data.current data.target 100 %}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Registrations Table -->
+    <div class="card">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Donor Registrations</h5>
+            <button class="btn btn-light btn-sm" data-bs-toggle="collapse" data-bs-target="#filtersCollapse">
+                <i class="fas fa-filter"></i> Filters
+            </button>
+        </div>
+        
+        <!-- Filters -->
+        <div class="collapse" id="filtersCollapse">
+            <div class="card-body bg-light">
+                <div class="row">
+                    <div class="col-md-3">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="bloodTypeFilter">
+                            <option value="">All Blood Types</option>
+                            {% for blood_type in blood_types %}
+                            <option value="{{ blood_type.0 }}">{{ blood_type.0 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Time Slot</th>
+                            <th>Donor</th>
+                            <th>Blood Type</th>
+                            <th>Status</th>
+                            <th>Health Metrics</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registration in registrations %}
+                        <tr>
+                            <td>
+                                {{ registration.scheduled_time|time:"H:i" }}
+                                {% if registration.arrival_time %}
+                                <br><small class="text-muted">Arrived: {{ registration.arrival_time|time:"H:i" }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ registration.donor.first_name }} {{ registration.donor.last_name }}</strong>
+                                <br>
+                                <small>{{ registration.donor.contact_number }}</small>
+                            </td>
+                            <td>{{ registration.donor.blood_type }}</td>
+                            <td>
+                                {% if registration.donation_successful %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% elif registration.donation_started %}
+                                    <span class="badge bg-info">In Progress</span>
+                                {% elif registration.is_present %}
+                                    <span class="badge bg-primary">Present</span>
+                                {% elif registration.confirmed_attendance %}
+                                    <span class="badge bg-warning">Confirmed</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Scheduled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                {% if registration.blood_pressure %}
+                                    BP: {{ registration.blood_pressure }}<br>
+                                {% endif %}
+                                {% if registration.hemoglobin_level %}
+                                    Hb: {{ registration.hemoglobin_level }} g/dL<br>
+                                {% endif %}
+                                {% if registration.pulse_rate %}
+                                    Pulse: {{ registration.pulse_rate }} bpm
+                                    {% endif %}
+                                </td>
+                                <td>
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateModal{{ registration.id }}">
+                                    Update
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                        <!-- Update Modal -->
+                        <div class="modal fade" id="updateModal{{ registration.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Update Registration</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                    <form method="post">
+                                            {% csrf_token %}
+                                        <input type="hidden" name="registration_id" value="{{ registration.id }}">
+                                            <div class="modal-body">
+                                            <!-- Pre-donation Section -->
+                                            <div class="card mb-3">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0">Pre-donation</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            {{ form.confirmed_attendance|as_crispy_field }}
+                                                            {{ form.scheduled_time|as_crispy_field }}
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            {{ form.pre_screening_complete|as_crispy_field }}
+                                                            {{ form.pre_screening_notes|as_crispy_field }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Donation Process Section -->
+                                            <div class="card mb-3">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0">Donation Process</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            {{ form.is_present|as_crispy_field }}
+                                                            {{ form.arrival_time|as_crispy_field }}
+                                                            {{ form.donation_started|as_crispy_field }}
+                                                            {{ form.donation_completed|as_crispy_field }}
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            {{ form.donation_successful|as_crispy_field }}
+                                                            {{ form.units_collected|as_crispy_field }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Health Metrics Section -->
+                                            <div class="card mb-3">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0">Health Metrics</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            {{ form.blood_pressure|as_crispy_field }}
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            {{ form.hemoglobin_level|as_crispy_field }}
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            {{ form.pulse_rate|as_crispy_field }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Post-donation Section -->
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0">Post-donation</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            {{ form.post_donation_condition|as_crispy_field }}
+                                                            {{ form.recovery_time|as_crispy_field }}
+                                                            {{ form.follow_up_required|as_crispy_field }}
+                                                            {{ form.notes|as_crispy_field }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No registrations yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+
+    // Filter functionality
+    document.getElementById('statusFilter').addEventListener('change', filterTable)
+    document.getElementById('bloodTypeFilter').addEventListener('change', filterTable)
+
+    function filterTable() {
+        var statusFilter = document.getElementById('statusFilter').value
+        var bloodTypeFilter = document.getElementById('bloodTypeFilter').value
+        var rows = document.querySelectorAll('tbody tr')
+
+        rows.forEach(function(row) {
+            var showRow = true
+            if (statusFilter) {
+                var status = row.querySelector('td:nth-child(4) .badge').textContent.toLowerCase()
+                if (!status.includes(statusFilter.toLowerCase())) showRow = false
+            }
+            if (bloodTypeFilter) {
+                var bloodType = row.querySelector('td:nth-child(3)').textContent
+                if (bloodType !== bloodTypeFilter) showRow = false
+            }
+            row.style.display = showRow ? '' : 'none'
+        })
+    }
+</script>
+{% endblock %}
+
+{% endblock %}

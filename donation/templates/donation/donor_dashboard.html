@@ -1,0 +1,396 @@
+{% extends "donation/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Donor Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .progress {
+        height: 10px;
+    }
+    .health-indicator {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    .quick-actions .btn {
+        border-radius: 20px;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if donor %}
+    <!-- Dashboard Header -->
+    <div class="dashboard-header shadow">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-4 mb-0">Welcome, {{ donor.first_name }}!</h1>
+                <p class="lead mb-0">
+                    <span class="badge bg-light text-danger">Blood Type: {{ donor.blood_type }}</span>
+                    <span class="ms-2"><i class="fas fa-map-marker-alt"></i> {{ donor.city }}</span>
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="quick-actions">
+                    <a href="{% url 'update-profile' %}" class="btn btn-light me-2">
+                        <i class="fas fa-user-edit"></i> Edit Profile
+                    </a>
+                    <a href="{% url 'emergency-contact-health-info' %}" class="btn btn-light">
+                        <i class="fas fa-heartbeat"></i> Health Info
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Completion -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Profile Completion</h5>
+                    <div class="row">
+                        {% for section, complete in profile_completion.items %}
+                        <div class="col">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="health-indicator bg-{{ complete|yesno:'success,danger' }}"></div>
+                                <span>{{ section|title|cut:"_"|capfirst }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card bg-primary text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Donations</h6>
+                            <h2 class="mb-0">{{ total_donations }}</h2>
+                        </div>
+                        <i class="fas fa-tint fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-success text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Lives Impacted</h6>
+                            <h2 class="mb-0">{{ lives_impacted }}</h2>
+                        </div>
+                        <i class="fas fa-heart fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-info text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Donation Streak</h6>
+                            <h2 class="mb-0">{{ donation_streak }}</h2>
+                        </div>
+                        <i class="fas fa-fire fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-warning text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Volume Donated</h6>
+                            <h2 class="mb-0">{{ total_volume_donated }}ml</h2>
+                        </div>
+                        <i class="fas fa-flask fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Next Donation & Health Status -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Next Donation Eligibility</h5>
+                    {% if next_eligible_date %}
+                        {% if days_until_eligible > 0 %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-clock"></i> You can donate again in {{ days_until_eligible }} days
+                                <br>
+                                <small>({{ next_eligible_date|date:"F d, Y" }})</small>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> You are eligible to donate now!
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> You are eligible to donate!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Health Status</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1"><strong>Hemoglobin Level:</strong></p>
+                            <p>{{ health_status.hemoglobin|default:"Not recorded" }} {% if health_status.hemoglobin %}g/dL{% endif %}</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1"><strong>Weight:</strong></p>
+                            <p>{{ health_status.weight|default:"Not recorded" }} {% if health_status.weight %}kg{% endif %}</p>
+                        </div>
+                        <div class="col-12">
+                            <p class="mb-1"><strong>Last Screening:</strong></p>
+                            <p>{{ health_status.last_screening|date:"F d, Y"|default:"Not recorded" }}</p>
+                        </div>
+                        <div class="col-12">
+                            <p class="mb-1"><strong>Current Status:</strong></p>
+                            {% if health_status.eligibility == 'Deferred' %}
+                                <div class="alert alert-danger mb-0">
+                                    <strong>Deferred:</strong> {{ health_status.deferral_reason }}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success mb-0">
+                                    {{ health_status.eligibility|default:"Pending Assessment" }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation History Chart & Blood Inventory -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Donation History</h5>
+                    <div class="chart-container">
+                        <canvas id="donationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Blood Inventory Status ({{ donor.blood_type }})</h5>
+                    {% if blood_inventory %}
+                        {% for item in blood_inventory %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span>{{ item.get_component_display }}</span>
+                                    <span class="badge {% if item.is_critical %}bg-danger{% else %}bg-success{% endif %}">
+                                        {{ item.units }} units
+                                    </span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar {% if item.is_critical %}bg-danger{% else %}bg-success{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {% widthratio item.units item.critical_level 100 %}%">
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No inventory data available for your blood type.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Donations & Nearby Drives -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Your Upcoming Donations</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_registrations %}
+                        <div class="list-group list-group-flush">
+                            {% for registration in upcoming_registrations %}
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ registration.drive.name }}</h6>
+                                            <p class="mb-1 text-muted">
+                                                <i class="fas fa-map-marker-alt"></i> {{ registration.drive.location }}
+                                            </p>
+                                            <small>
+                                                <i class="fas fa-clock"></i> 
+                                                {{ registration.drive.start_time|time:"g:i A" }} - {{ registration.drive.end_time|time:"g:i A" }}
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-primary">
+                                                {{ registration.drive.date|date:"M d" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No upcoming donations scheduled.</p>
+                            <a href="{% url 'drive-list' %}" class="btn btn-primary">Find a Drive</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Nearby Donation Drives</h5>
+                </div>
+                <div class="card-body">
+                    {% if nearby_drives %}
+                        <div class="list-group list-group-flush">
+                            {% for drive in nearby_drives %}
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ drive.name }}</h6>
+                                            <p class="mb-1 text-muted">
+                                                <i class="fas fa-map-marker-alt"></i> {{ drive.location }}
+                                            </p>
+                                            <small>
+                                                <i class="fas fa-clock"></i> 
+                                                {{ drive.start_time|time:"g:i A" }} - {{ drive.end_time|time:"g:i A" }}
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-info mb-2">
+                                                {{ drive.date|date:"M d" }}
+                                            </span>
+                                            <br>
+                                            <a href="{% url 'drive-detail' drive.pk %}" class="btn btn-sm btn-outline-primary">
+                                                Register
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No nearby donation drives available.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-user-edit fa-4x text-muted mb-3"></i>
+        <h3>Complete Your Profile</h3>
+        <p class="text-muted">Please complete your profile to view dashboard details.</p>
+        <a href="{% url 'update-profile' %}" class="btn btn-primary">Complete Profile</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Donation History Chart
+    var ctx = document.getElementById('donationChart').getContext('2d');
+    var monthlyData = {{ monthly_history|safe }};
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: monthlyData.map(item => item.month),
+            datasets: [{
+                label: 'Donations',
+                data: monthlyData.map(item => item.count),
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

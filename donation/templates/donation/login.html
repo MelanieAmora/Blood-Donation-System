@@ -1,0 +1,96 @@
+{% extends 'donation/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Login - Blood Donation System{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <div class="login-header">
+            <i class="fas fa-tint text-danger mb-3"></i>
+            <h2>Welcome Back</h2>
+            <p>Sign in to continue to Blood Donation System</p>
+        </div>
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-danger w-100">
+                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+            </button>
+        </form>
+        <div class="login-footer">
+            <p>Don't have an account? <a href="{% url 'register' %}" class="text-danger">Register now</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background-color: #f8f9fa;
+    }
+
+    .login-box {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .login-header i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .login-header h2 {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .login-header p {
+        color: #6c757d;
+    }
+
+    .login-form {
+        margin-bottom: 1.5rem;
+    }
+
+    .login-form .form-control {
+        padding: 0.75rem 1rem;
+        border-radius: 5px;
+    }
+
+    .login-form .form-control:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .login-footer {
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .login-footer a {
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .login-footer a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}

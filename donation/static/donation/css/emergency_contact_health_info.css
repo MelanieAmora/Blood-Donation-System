@@ -1,0 +1,28 @@
+/* Emergency Contact / Health Info icons */
+.text-success {
+    color: #28a745 !important; /* Bootstrap green */
+    font-size: 1.2rem;
+    vertical-align: middle;
+}
+
+.text-danger {
+    color: #dc3545 !important; /* Bootstrap red */
+    font-size: 1.2rem;
+    vertical-align: middle;
+}
+
+/* Modal overrides for larger modal */
+.modal-lg {
+    max-width: 800px;
+}
+
+/* Responsive textarea in forms */
+textarea.form-control {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* Button spacing */
+.btn + .btn {
+    margin-left: 0.5rem;
+}

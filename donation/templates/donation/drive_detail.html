@@ -1,0 +1,127 @@
+{% extends "donation/base.html" %}
+
+{% block title %}{{ drive.name }}{% endblock %}
+
+{% block content %}
+<div class="container my-4" role="main">
+    <header class="mb-4">
+        <h1 class="display-4" id="drive-title">{{ drive.name }}</h1>
+        <p class="lead" aria-label="Date and time">
+            {% if drive.start_date == drive.end_date %}
+                {{ drive.start_date|date:"F j, Y" }}
+            {% else %}
+                {{ drive.start_date|date:"F j" }} - {{ drive.end_date|date:"F j, Y" }}
+            {% endif %}
+            from {{ drive.start_time|time:"P" }} to {{ drive.end_time|time:"P" }}
+        </p>
+        <p aria-label="Location">
+            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i> {{ drive.location }}
+        </p>
+    </header>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <section aria-labelledby="core-info-heading" class="mb-4">
+                <h2 id="core-info-heading">Core Information</h2>
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <p><strong>Organizer:</strong> {{ drive.organizer }}</p>
+                        <p><strong>Contact Person:</strong> {{ drive.contact_person }}</p>
+                        <p><strong>Contact Number:</strong> <a href="tel:{{ drive.contact_number }}">{{ drive.contact_number }}</a></p>
+                        <p><strong>Contact Email:</strong> <a href="mailto:{{ drive.contact_person|default_if_none:'' }}@example.com">{{ drive.contact_person|default_if_none:'' }}@example.com</a></p>
+                        <p><strong>Available Slots:</strong> 
+                            {% if remaining_slots > 0 %}
+                                <span class="text-success" aria-live="polite">
+                                    {{ drive.max_donors }} / {{ remaining_slots }} remaining
+                                </span>
+                            {% else %}
+                                <span class="text-danger" aria-live="polite">
+                                    {{ drive.max_donors }} / 0 remaining
+                                </span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Registration Status:</strong>
+                            {% if drive.date >= now %}
+                                {% if remaining_slots > 0 %}
+                                    <span class="badge bg-success" aria-label="Registration open">Open</span>
+                                {% else %}
+                                    <span class="badge bg-danger" aria-label="Registration full">Full</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary" aria-label="Event passed">Passed</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section aria-labelledby="description-heading" class="mb-4">
+                <h2 id="description-heading">Event Description</h2>
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <p>{{ drive.description|linebreaks }}</p>
+                        <ul>
+                            <li>Community blood donation event</li>
+                            <li>Free health screening</li>
+                            <li>Refreshments provided</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section aria-labelledby="donor-requirements-heading" class="mb-4">
+                <h2 id="donor-requirements-heading">Donor Requirements</h2>
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3>Eligibility Checklist</h3>
+                        <ul>
+                            <li>Age between 18 and 65 years</li>
+                            <li>Weight at least 50 kg</li>
+                            <li>Good general health</li>
+                        </ul>
+                        <h3>Preparation Tips</h3>
+                        <ul>
+                            <li>Stay hydrated</li>
+                            <li>Eat a healthy meal before donating</li>
+                            <li>Bring a valid ID and donor card if available</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="col-lg-4" aria-label="Location map and actions">
+            <section class="mb-4">
+                <h2>Location Map</h2>
+                {% if drive.map_embed %}
+                    <div class="ratio ratio-16x9" aria-label="Map showing location">
+                        {{ drive.map_embed|safe }}
+                    </div>
+                {% else %}
+                    <p>Map is not available. Please use the address to find directions.</p>
+                {% endif %}
+                <p><a href="https://www.google.com/maps/search/?api=1&query={{ drive.location|urlencode }}" target="_blank" rel="noopener" aria-label="Open Google Maps for directions">Open in Google Maps</a></p>
+            </section>
+
+            <section>
+                {% if user.is_authenticated %}
+                    {% if is_registered %}
+                        <button class="btn btn-secondary w-100 mb-2" disabled aria-disabled="true">Already Registered</button>
+                    {% elif remaining_slots > 0 %}
+                        <a href="{% url 'register-for-drive' drive.pk %}" class="btn btn-primary w-100 mb-2" aria-label="Register for this drive">Register</a>
+                    {% else %}
+                        <button class="btn btn-danger w-100 mb-2" disabled aria-disabled="true">Registration Full</button>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login' %}?next={% url 'drive-detail' drive.pk %}" class="btn btn-primary w-100 mb-2" aria-label="Login to register">Login to Register</a>
+                    <a href="{% url 'register-donor' %}" class="btn btn-outline-primary w-100" aria-label="Register as donor">Register as Donor</a>
+                {% endif %}
+                {% if user.is_staff %}
+                    <a href="{% url 'create-drive' %}" class="btn btn-warning w-100 mt-3" aria-label="Edit Drive">Edit Drive</a>
+                {% endif %}
+                <a href="{% url 'drive-list' %}" class="btn btn-link w-100 mt-3" aria-label="Back to list">Back to List</a>
+            </section>
+        </aside>
+    </div>
+</div>
+{% endblock %}

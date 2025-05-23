@@ -1,0 +1,80 @@
+{% extends "donation/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update Your Health Information{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Update Your Health Information</h2>
+    <form method="post" novalidate class="needs-validation" id="healthInfoForm">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-4">
+                {{ form.emergency_contact_name|as_crispy_field }}
+            </div>
+            <div class="col-md-4">
+                {{ form.emergency_contact_relation|as_crispy_field }}
+            </div>
+            <div class="col-md-4">
+                {{ form.emergency_contact_phone|as_crispy_field }}
+            </div>
+        </div>
+        <hr />
+        <h4>Medical Notes</h4>
+        <div class="mb-3">
+            {{ form.allergies|as_crispy_field }}
+        </div>
+        <div class="mb-3">
+            {{ form.chronic_conditions|as_crispy_field }}
+        </div>
+        <div class="mb-3">
+            {{ form.medications|as_crispy_field }}
+        </div>
+        <hr />
+        <h4>Last Screening Data</h4>
+        <div class="row g-3">
+            <div class="col-md-4">
+                {{ form.last_hemoglobin_level|as_crispy_field }}
+            </div>
+            <div class="col-md-4">
+                {{ form.last_screening_date|as_crispy_field }}
+            </div>
+            <div class="col-md-4">
+                {{ form.weight|as_crispy_field }}
+            </div>
+        </div>
+        <div class="mb-3 mt-3">
+            {{ form.eligibility_status|as_crispy_field }}
+        </div>
+        <div class="form-check mb-3">
+            {{ form.is_deferred }}
+            <label class="form-check-label" for="{{ form.is_deferred.id_for_label }}">Temporarily Deferred</label>
+        </div>
+        <div class="mb-3">
+            {{ form.deferral_reason|as_crispy_field }}
+        </div>
+        <div class="d-flex align-items-center mt-4">
+            <button type="submit" class="btn btn-primary" id="saveButton" aria-label="Save health information">Save</button>
+            <a href="{% url 'donor-dashboard' %}" class="btn btn-secondary ms-3" id="cancelButton" aria-label="Cancel and return to dashboard">Cancel</a>
+        </div>
+    </form>
+</div>
+<script>
+    (function () {
+        'use strict'
+        var form = document.getElementById('healthInfoForm');
+        var saveBtn = document.getElementById('saveButton');
+
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+            }
+            form.classList.add('was-validated');
+        }, false);
+    })();
+</script>
+{% endblock %}

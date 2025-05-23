@@ -1,0 +1,22 @@
+{% extends "donation/base.html" %}
+
+{% block title %}Logged Out{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4>Logged Out</h4>
+            </div>
+            <div class="card-body">
+                <p>You have been successfully logged out.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Confirm Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

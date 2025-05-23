@@ -27,10 +27,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-9*l8@90)ncmx17pw)hb1p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'RENDER' not in os.environ
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = []
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+ALLOWED_HOSTS.extend(['localhost', '127.0.0.1'])
 
 
 # Application definition
@@ -144,10 +145,13 @@ LOGIN_REDIRECT_URL = 'donor-dashboard'  # After successful login
 LOGOUT_REDIRECT_URL = 'home'            # After logout
 LOGIN_URL = 'login'                     # Where to redirect for login
 
-# Security Settings
+# Production Settings
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
+    # HTTPS Settings
     CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
+    SESSION_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
